@@ -5,5 +5,8 @@ services:
     volumes:
       - ./:/app
       - ./output:/app/output
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    environment:
+      - DISPLAY=${DISPLAY}
     stdin_open: true
     tty: true

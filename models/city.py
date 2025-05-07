@@ -12,3 +12,9 @@ class City:
     
     def __str__(self):
         return self.name
+    
+    def __lt__(self, other):
+        # Necessário para comparações em filas de prioridade (heapq)
+        if isinstance(other, City):
+            return self.name < other.name
+        return NotImplemented

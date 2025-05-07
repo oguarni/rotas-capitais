@@ -20,7 +20,7 @@ Este projeto implementa diferentes algoritmos de busca para encontrar rotas entr
 
 ```bash
 # Clone o repositório
-git clone https://github.com/seu-usuario/rotas-capitais.git
+git clone https://github.com/oguarni/rotas-capitais.git
 cd rotas-capitais
 
 # Instale as dependências
@@ -92,18 +92,6 @@ Cenário: São Paulo -> Rio de Janeiro
 
 5. **D - Dependency Inversion Principle**: Depender de abstrações, não implementações.
    - Exemplo: `PathFinder` depende da interface `SearchAlgorithm`, não de implementações concretas.
-
-## Geração do Relatório
-
-Para gerar o relatório comparativo, execute o programa e escolha a opção 3 para analisar os cenários predefinidos. Use as saídas para compor o relatório final.
-
-## Criação do Vídeo
-
-Para o vídeo de demonstração, recomenda-se:
-1. Apresentar o problema e a estrutura da solução
-2. Demonstrar a execução do programa
-3. Analisar os resultados dos diferentes algoritmos
-4. Comparar eficiência e otimalidade das soluções
 
 ## Contribuição
 

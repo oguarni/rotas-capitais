@@ -1,4 +1,5 @@
 import sys
+import os
 from models.city import City
 from utils.data_loader import DataLoader, MockDataLoader
 from search.bfs import BFS
@@ -13,13 +14,16 @@ class PathFinder:
         if use_mock_data:
             self.graph = MockDataLoader().load_data()
         else:
-            data_url = "http://distanciasemapas-brasilrs.blogspot.com/2009/06/distancia-entre-as-capitais-brasileiras.html"
-            self.graph = DataLoader().load_from_url(data_url)
+            # Tenta carregar dados do JSON
+            data_loader = DataLoader()
             
-            # Fallback para dados mockados se falhar o carregamento
-            if not self.graph:
-                print("Usando dados simulados como fallback.")
-                self.graph = MockDataLoader().load_data()
+            # Verifica se o arquivo JSON existe
+            json_path = "data/distances.json"
+            if os.path.exists(json_path):
+                self.graph = data_loader.load_from_json(json_path)
+            else:
+                print(f"Arquivo {json_path} não encontrado. Usando dados simulados.")
+                self.graph = data_loader._create_mock_data()
         
         # Inicializa os algoritmos
         self.algorithms = {
@@ -102,7 +106,7 @@ def print_menu():
 
 def main():
     # Inicializa o sistema
-    path_finder = PathFinder(use_mock_data=True)  # Mudar para False para usar dados reais
+    path_finder = PathFinder(use_mock_data=False)  # Agora usa dados do JSON por padrão
     
     while True:
         print_menu()
