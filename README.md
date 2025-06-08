@@ -16,7 +16,7 @@ Este projeto implementa e compara diferentes algoritmos de busca para encontrar 
 - **DFS (Busca em Profundidade)**: Explora caminhos em profundidade
 - **UCS (Busca de Custo Uniforme)**: Encontra rota de menor distância (ótimo)
 - **Greedy (Busca Gulosa)**: Usa heurística de distância euclidiana
-- **A* (A-Star)**: Combina custo real + heurística (ótimo e eficiente)
+- **A* (A-Star)***: Combina custo real + heurística (ótimo e eficiente)
 
 ### 🚗✈️ Tipos de Transporte
 - **Aéreo**: Conexões diretas por linha reta
