@@ -25,15 +25,14 @@ import zipfile
 # Importar as coordenadas geográficas das capitais
 from geo_coordinates import CAPITAL_COORDINATES
 
-# URL do shapefile do Brasil
-BRAZIL_SHAPEFILE_URL = "https://www.ibge.gov.br/geociencias/cartas-e-mapas/bases-cartograficas-continuas/15759-brasil.html?=&t=downloads"
+# URLs para shapefiles do Brasil (backup)
 
 class RouteFinderApp(tk.Tk):
     def __init__(self):
         super().__init__()
         
         self.title("Busca de Rotas entre Capitais Brasileiras")
-        self.geometry("1200x800")
+        self.geometry("1400x900")
         self.configure(bg="#f0f0f0")
         
         # Carregamento de dados
@@ -72,7 +71,24 @@ class RouteFinderApp(tk.Tk):
             return self.data_loader._create_mock_data()
     
     def load_brazil_shapefile(self):
-        # Verifica se já temos os shapefiles baixados
+        # Primeiro tenta carregar o GeoJSON baixado da internet
+        geojson_files = [
+            "data/brazil_country.geojson"
+        ]
+        
+        for geojson_file in geojson_files:
+            if os.path.exists(geojson_file):
+                try:
+                    print(f"Carregando mapa do Brasil de: {geojson_file}")
+                    gdf = gpd.read_file(geojson_file)
+                    # Verifica se o GeoJSON tem dados válidos
+                    if not gdf.empty and gdf.geometry.iloc[0] is not None:
+                        print(f"Mapa carregado com sucesso! Contém {len(gdf)} geometria(s)")
+                        return gdf
+                except Exception as e:
+                    print(f"Erro ao carregar {geojson_file}: {e}")
+        
+        # Fallback: verifica se já temos os shapefiles baixados
         shapefile_path = "data/brazil_states"
         if not os.path.exists(shapefile_path):
             os.makedirs(shapefile_path, exist_ok=True)
@@ -96,50 +112,81 @@ class RouteFinderApp(tk.Tk):
             return self.create_simplified_brazil_polygon()
     
     def download_simplified_brazil_shapefile(self, output_dir):
-        """Baixa uma versão simplificada do shapefile do Brasil"""
+        """Cria arquivos de shapefile simplificados localmente"""
+        print("Criando shapefiles simplificados localmente...")
         
-        # URL para um shapefile simplificado do Brasil
-        url = "https://download.geofabrik.de/south-america/brazil-latest-free.shp.zip"
-        
+        # Cria um shapefile simples com apenas o contorno do Brasil
         try:
-            # Caminho para o arquivo zip
-            zip_path = os.path.join(output_dir, "brazil.zip")
+            from shapely.geometry import Polygon
+            import geopandas as gpd
             
-            # Baixa o arquivo zip
-            urllib.request.urlretrieve(url, zip_path)
+            # Contorno do Brasil (simplificado)
+            brazil_coords = [
+                (-33.742, -53.374), (-33.750, -53.647), (-32.392, -52.166), (-31.216, -51.320),
+                (-30.034, -51.217), (-29.358, -50.338), (-28.558, -49.571), (-27.384, -48.555),
+                (-26.330, -48.710), (-25.493, -48.301), (-24.578, -47.287), (-23.966, -46.603),
+                (-23.335, -46.574), (-22.970, -43.207), (-22.775, -42.032), (-22.057, -41.058),
+                (-21.046, -40.920), (-18.348, -39.467), (-16.697, -39.167), (-15.253, -38.954),
+                (-14.234, -38.808), (-12.946, -38.839), (-11.851, -37.317), (-10.478, -36.579),
+                (-9.511, -35.128), (-8.533, -35.096), (-7.588, -35.377), (-7.122, -34.834),
+                (-6.295, -35.036), (-5.195, -36.523), (-4.553, -37.288), (-3.239, -38.613),
+                (-2.243, -40.051), (-1.349, -42.000), (-0.947, -44.644), (-0.159, -46.594),
+                (0.040, -48.973), (0.728, -50.454), (1.689, -51.140), (2.813, -51.643),
+                (4.307, -52.684), (5.266, -54.624), (4.281, -55.969), (2.329, -56.778),
+                (1.626, -58.925), (2.021, -59.748), (3.416, -60.048), (4.776, -60.733),
+                (5.210, -61.849), (4.060, -63.370), (3.780, -64.547), (4.583, -67.868),
+                (2.347, -68.880), (1.176, -69.803), (-0.703, -70.093), (-2.564, -70.160),
+                (-4.229, -69.906), (-6.298, -70.039), (-7.345, -72.017), (-9.032, -73.236),
+                (-10.305, -72.248), (-10.846, -70.992), (-11.525, -69.455), (-11.773, -67.467),
+                (-12.870, -65.746), (-14.535, -64.548), (-15.867, -63.196), (-16.582, -60.584),
+                (-17.738, -59.313), (-19.407, -57.870), (-21.948, -57.130), (-23.798, -57.777),
+                (-25.166, -57.636), (-26.171, -57.847), (-27.378, -58.427), (-28.877, -57.881),
+                (-30.174, -57.182), (-30.741, -55.919), (-31.585, -55.611), (-32.619, -55.797),
+                (-33.253, -54.625), (-33.742, -53.374)
+            ]
             
-            # Extrai o arquivo zip
-            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                zip_ref.extractall(output_dir)
-                
-            # Remove o arquivo zip
-            os.remove(zip_path)
+            # Converte para formato correto (longitude, latitude)
+            coords = [(lon, lat) for lat, lon in brazil_coords]
+            polygon = Polygon(coords)
             
-            print("Shapefiles baixados com sucesso!")
+            # Cria GeoDataFrame
+            gdf = gpd.GeoDataFrame({'name': ['Brasil']}, geometry=[polygon])
+            
+            # Salva como shapefile
+            shapefile_path = os.path.join(output_dir, "BR_UF_2022.shp")
+            gdf.to_file(shapefile_path)
+            
+            print("Shapefile criado com sucesso!")
+            
         except Exception as e:
-            print(f"Erro ao baixar os shapefiles: {e}")
+            print(f"Erro ao criar shapefile: {e}")
             raise e
     
     def create_simplified_brazil_polygon(self):
-        """Cria um polígono simplificado do Brasil caso não seja possível baixar os shapefiles"""
-        # Contorno simplificado do Brasil
+        """Cria um polígono mais detalhado do Brasil caso não seja possível baixar os shapefiles"""
+        # Contorno mais detalhado e preciso do Brasil
         brazil_outline = [
-                (-33.8, -53.2), (-33.7, -53.5), (-32.0, -52.0), (-30.0, -51.0),
-                (-28.5, -49.0), (-27.0, -48.5), (-26.0, -48.5), (-25.0, -48.0),
-                (-23.0, -47.0), (-22.9, -43.2), (-22.5, -41.9), (-21.0, -40.9),
-                (-18.3, -39.7), (-16.0, -39.0), (-14.0, -38.5), (-12.9, -38.5),
-                (-11.5, -37.4), (-10.0, -36.5), (-9.0, -35.0), (-7.1, -34.8),
-                (-5.8, -35.2), (-4.8, -37.1), (-3.5, -38.5), (-2.5, -40.4),
-                (-1.5, -43.3), (-1.1, -44.5), (-0.1, -49.9), (0.5, -51.0),
-                (1.3, -50.0), (2.0, -51.0), (3.9, -51.8), (4.5, -51.9),
-                (4.0, -52.6), (3.1, -54.6), (2.5, -55.9), (2.0, -56.0),
-                (2.8, -57.9), (2.4, -60.0), (4.4, -61.8), (3.7, -67.1),
-                (1.3, -69.6), (-2.3, -69.9), (-4.2, -69.9), (-7.1, -73.0),
-                (-9.4, -72.5), (-9.2, -70.8), (-11.1, -68.8), (-10.9, -66.0),
-                (-12.4, -63.1), (-12.6, -60.0), (-15.0, -59.9), (-18.0, -58.4),
-                (-20.5, -58.0), (-22.0, -57.8), (-23.4, -58.2), (-25.5, -57.7),
-                (-27.1, -58.4), (-30.2, -57.3), (-30.5, -56.0), (-31.3, -55.9),
-                (-32.9, -56.8), (-33.5, -53.5), (-33.8, -53.2)
+            (-33.742, -53.374), (-33.750, -53.647), (-32.392, -52.166), (-31.216, -51.320),
+            (-30.034, -51.217), (-29.358, -50.338), (-28.558, -49.571), (-27.384, -48.555),
+            (-26.330, -48.710), (-25.493, -48.301), (-24.578, -47.287), (-23.966, -46.603),
+            (-23.335, -46.574), (-22.970, -43.207), (-22.775, -42.032), (-22.057, -41.058),
+            (-21.046, -40.920), (-18.348, -39.467), (-16.697, -39.167), (-15.253, -38.954),
+            (-14.234, -38.808), (-12.946, -38.839), (-11.851, -37.317), (-10.478, -36.579),
+            (-9.511, -35.128), (-8.533, -35.096), (-7.588, -35.377), (-7.122, -34.834),
+            (-6.295, -35.036), (-5.195, -36.523), (-4.553, -37.288), (-3.239, -38.613),
+            (-2.243, -40.051), (-1.349, -42.000), (-0.947, -44.644), (-0.159, -46.594),
+            (0.040, -48.973), (0.728, -50.454), (1.689, -51.140), (2.813, -51.643),
+            (4.307, -52.684), (5.266, -54.624), (4.281, -55.969), (2.329, -56.778),
+            (1.626, -58.925), (2.021, -59.748), (3.416, -60.048), (4.776, -60.733),
+            (5.210, -61.849), (4.060, -63.370), (3.780, -64.547), (4.583, -67.868),
+            (2.347, -68.880), (1.176, -69.803), (-0.703, -70.093), (-2.564, -70.160),
+            (-4.229, -69.906), (-6.298, -70.039), (-7.345, -72.017), (-9.032, -73.236),
+            (-10.305, -72.248), (-10.846, -70.992), (-11.525, -69.455), (-11.773, -67.467),
+            (-12.870, -65.746), (-14.535, -64.548), (-15.867, -63.196), (-16.582, -60.584),
+            (-17.738, -59.313), (-19.407, -57.870), (-21.948, -57.130), (-23.798, -57.777),
+            (-25.166, -57.636), (-26.171, -57.847), (-27.378, -58.427), (-28.877, -57.881),
+            (-30.174, -57.182), (-30.741, -55.919), (-31.585, -55.611), (-32.619, -55.797),
+            (-33.253, -54.625), (-33.742, -53.374)
         ]
         
         # Cria um DataFrame com o polígono
@@ -250,8 +297,8 @@ class RouteFinderApp(tk.Tk):
         graph_frame = ttk.LabelFrame(right_frame, text="Visualização do Caminho", padding=10)
         graph_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
-        # Inicializa a figura para o gráfico
-        self.figure = plt.Figure(figsize=(6, 6), dpi=100)
+        # Inicializa a figura para o gráfico com tamanho maior
+        self.figure = plt.Figure(figsize=(10, 8), dpi=100)
         self.ax = self.figure.add_subplot(111)
         self.canvas = FigureCanvasTkAgg(self.figure, graph_frame)
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
@@ -431,6 +478,84 @@ class RouteFinderApp(tk.Tk):
         
         return False
     
+    def calculate_best_legend_position(self, path):
+        """Calcula a melhor posição para a legenda baseada nas cidades da rota"""
+        # Obtem coordenadas de todas as cidades da rota
+        route_coords = []
+        for city in path:
+            if city.name in CAPITAL_COORDINATES:
+                lat, lon = CAPITAL_COORDINATES[city.name]
+                route_coords.append((lon, lat))
+        
+        if not route_coords:
+            return 'lower right'  # fallback padrão
+        
+        # Calcula centro da rota
+        center_lon = sum(coord[0] for coord in route_coords) / len(route_coords)
+        center_lat = sum(coord[1] for coord in route_coords) / len(route_coords)
+        
+        # Define limites do mapa (mesmos usados na visualização)
+        map_bounds = {
+            'left': -73,
+            'right': -33,
+            'bottom': -33,
+            'top': 5
+        }
+        
+        # Calcula em que região do mapa a rota está concentrada
+        rel_lon = (center_lon - map_bounds['left']) / (map_bounds['right'] - map_bounds['left'])
+        rel_lat = (center_lat - map_bounds['bottom']) / (map_bounds['top'] - map_bounds['bottom'])
+        
+        # Escolhe posição da legenda baseada na posição da rota
+        if rel_lon > 0.6:  # Rota à direita
+            if rel_lat > 0.6:  # Parte superior direita
+                return 'lower left'
+            else:  # Parte inferior direita  
+                return 'upper left'
+        else:  # Rota à esquerda ou centro
+            if rel_lat > 0.6:  # Parte superior
+                return 'lower right'
+            else:  # Parte inferior
+                return 'upper right'
+    
+    def create_land_route(self, lat1, lon1, lat2, lon2):
+        """Cria uma rota terrestre que evita passar pelo mar"""
+        # Pontos de controle para roteamento terrestre inteligente
+        # Baseado na geografia do Brasil para evitar oceano
+        
+        # Se a rota é principalmente norte-sul (mesma região)
+        if abs(lon2 - lon1) < 3:  # Mesma região longitudinal
+            return [(lon1, lat1), (lon2, lat2)]
+        
+        # Se a rota é leste-oeste, usa pontos intermediários terrestres
+        elif abs(lat2 - lat1) < 3:  # Mesma região latitudinal
+            # Encontra um ponto intermediário no interior
+            mid_lat = (lat1 + lat2) / 2
+            interior_lon = min(lon1, lon2) + abs(lon2 - lon1) * 0.3  # Mais para o interior
+            return [(lon1, lat1), (interior_lon, mid_lat), (lon2, lat2)]
+        
+        # Para rotas diagonais longas, usa roteamento por regiões
+        else:
+            # Determina se passa pelo interior (Brasília como hub)
+            if "Brasília" in CAPITAL_COORDINATES:
+                brasilia_lat, brasilia_lon = CAPITAL_COORDINATES["Brasília"]
+            else:
+                brasilia_lat, brasilia_lon = -15.7975, -47.8919
+            
+            # Se uma das cidades é muito ao norte ou nordeste
+            if (lat1 > -10 or lat2 > -10) and (lon1 > -45 or lon2 > -45):
+                # Rota pelo interior passando por região central
+                return [(lon1, lat1), (brasilia_lon, brasilia_lat), (lon2, lat2)]
+            
+            # Para outras rotas, ponto intermediário no interior
+            mid_lat = (lat1 + lat2) / 2
+            mid_lon = (lon1 + lon2) / 2
+            # Ajusta para o interior se estiver muito próximo da costa
+            if mid_lon > -42:  # Muito próximo da costa leste
+                mid_lon = -45  # Move para o interior
+            
+            return [(lon1, lat1), (mid_lon, mid_lat), (lon2, lat2)]
+    
     def visualize_path_on_map(self, path, transport_type):
         # Limpa o gráfico anterior
         self.ax.clear()
@@ -441,25 +566,71 @@ class RouteFinderApp(tk.Tk):
         # Plota todas as capitais com um tamanho pequeno
         for city_name, (lat, lon) in CAPITAL_COORDINATES.items():
             if city_name in [city.name for city in self.graph.cities]:
-                self.ax.plot(lon, lat, 'o', markersize=4, color='silver', alpha=0.7)
+                self.ax.plot(lon, lat, 'o', markersize=3, color='#708090', alpha=0.6, 
+                           markeredgecolor='white', markeredgewidth=0.5)
+        
+        # Dicionário com posicionamentos para labels das rotas
+        label_positions = {
+            "São Paulo": ("center", "top"),
+            "Rio de Janeiro": ("left", "bottom"), 
+            "Brasília": ("center", "bottom"),
+            "Salvador": ("right", "bottom"),
+            "Manaus": ("center", "bottom"),
+            "Porto Alegre": ("center", "top"),
+            "Recife": ("left", "center"),
+            "Belém": ("center", "top"),
+            "Fortaleza": ("right", "center"),
+            "Belo Horizonte": ("right", "top"),
+            "Curitiba": ("right", "bottom"),
+            "Goiânia": ("left", "top"),
+            "Vitória": ("right", "center"),
+            "Florianópolis": ("left", "center"),
+            "Campo Grande": ("center", "bottom"),
+            "Cuiabá": ("left", "bottom"),
+            "João Pessoa": ("right", "top"),
+            "Natal": ("right", "bottom"),
+            "Aracaju": ("left", "center"),
+            "Maceió": ("left", "bottom"),
+            "Teresina": ("center", "top"),
+            "São Luís": ("right", "bottom"),
+            "Palmas": ("right", "center"),
+            "Macapá": ("center", "bottom"),
+            "Boa Vista": ("center", "bottom"),
+            "Rio Branco": ("center", "top"),
+            "Porto Velho": ("left", "center")
+        }
         
         # Plota as cidades no caminho com tamanho maior e cores destacadas
         for i, city in enumerate(path):
             if city.name in CAPITAL_COORDINATES:
                 lat, lon = CAPITAL_COORDINATES[city.name]
                 
+                # Obtém posicionamento inteligente
+                ha, va = label_positions.get(city.name, ("center", "bottom"))
+                offset_x = 0.4 if ha == "left" else (-0.4 if ha == "right" else 0)
+                offset_y = 0.4 if va == "bottom" else (-0.4 if va == "top" else 0)
+                
                 if i == 0:  # Origem
-                    self.ax.plot(lon, lat, 'o', markersize=10, color='green', alpha=0.9)
-                    self.ax.annotate(city.name, (lon, lat), fontsize=9, ha='center', va='bottom', 
-                                    bbox=dict(boxstyle="round,pad=0.3", facecolor='white', alpha=0.8))
+                    self.ax.plot(lon, lat, 'o', markersize=14, color='#228B22', alpha=0.9,
+                               markeredgecolor='white', markeredgewidth=2)
+                    self.ax.annotate(city.name, (lon + offset_x, lat + offset_y), 
+                                   fontsize=11, ha=ha, va=va, weight='bold',
+                                   bbox=dict(boxstyle="round,pad=0.4", facecolor='#90EE90', 
+                                            alpha=0.95, edgecolor='#228B22', linewidth=2))
                 elif i == len(path) - 1:  # Destino
-                    self.ax.plot(lon, lat, 'o', markersize=10, color='red', alpha=0.9)
-                    self.ax.annotate(city.name, (lon, lat), fontsize=9, ha='center', va='bottom', 
-                                    bbox=dict(boxstyle="round,pad=0.3", facecolor='white', alpha=0.8))
+                    self.ax.plot(lon, lat, 'o', markersize=14, color='#DC143C', alpha=0.9,
+                               markeredgecolor='white', markeredgewidth=2)
+                    self.ax.annotate(city.name, (lon + offset_x, lat + offset_y), 
+                                   fontsize=11, ha=ha, va=va, weight='bold',
+                                   bbox=dict(boxstyle="round,pad=0.4", facecolor='#FFB6C1', 
+                                            alpha=0.95, edgecolor='#DC143C', linewidth=2))
                 else:  # Cidades intermediárias
-                    self.ax.plot(lon, lat, 'o', markersize=8, color='blue', alpha=0.9)
-                    self.ax.annotate(city.name, (lon, lat), fontsize=8, ha='center', va='bottom', 
-                                    bbox=dict(boxstyle="round,pad=0.3", facecolor='white', alpha=0.8))
+                    self.ax.plot(lon, lat, 'o', markersize=11, color='#4169E1', alpha=0.9,
+                               markeredgecolor='white', markeredgewidth=1.5)
+                    self.ax.annotate(city.name, (lon + offset_x*0.7, lat + offset_y*0.7), 
+                                   fontsize=9, ha=ha, va=va,
+                                   bbox=dict(boxstyle="round,pad=0.3", facecolor='#ADD8E6', 
+                                            alpha=0.9, edgecolor='#4169E1', linewidth=1))
         
         # Plota as conexões do caminho
         for i in range(len(path) - 1):
@@ -470,45 +641,87 @@ class RouteFinderApp(tk.Tk):
                 # Estilo da linha com base no tipo de transporte
                 if transport_type == "air":
                     # Para transporte aéreo, linha reta
-                    self.ax.plot([lon1, lon2], [lat1, lat2], '-', linewidth=2.5, color='blue', alpha=0.7)
+                    self.ax.plot([lon1, lon2], [lat1, lat2], '-', linewidth=3, color='#4169E1', 
+                               alpha=0.8, solid_capstyle='round')
+                    # Adiciona setas para indicar direção
+                    mid_lon, mid_lat = (lon1 + lon2) / 2, (lat1 + lat2) / 2
+                    self.ax.annotate('', xy=(lon2, lat2), xytext=(mid_lon, mid_lat),
+                                   arrowprops=dict(arrowstyle='->', color='#4169E1', lw=2))
                 else:
-                    # Para transporte terrestre, linha pontilhada
-                    self.ax.plot([lon1, lon2], [lat1, lat2], '--', linewidth=2.5, color='brown', alpha=0.7)
+                    # Para transporte terrestre, usa roteamento inteligente
+                    route_points = self.create_land_route(lat1, lon1, lat2, lon2)
+                    
+                    # Desenha a rota com múltiplos segmentos se necessário
+                    for j in range(len(route_points) - 1):
+                        x1, y1 = route_points[j]
+                        x2, y2 = route_points[j + 1]
+                        self.ax.plot([x1, x2], [y1, y2], '-', linewidth=3, color='#8B4513', 
+                                   alpha=0.8, solid_capstyle='round')
+                    
+                    # Adiciona seta no final da rota
+                    if len(route_points) >= 2:
+                        # Seta do penúltimo para o último ponto
+                        pen_x, pen_y = route_points[-2]
+                        last_x, last_y = route_points[-1]
+                        self.ax.annotate('', xy=(last_x, last_y), xytext=(pen_x, pen_y),
+                                       arrowprops=dict(arrowstyle='->', color='#8B4513', lw=2))
         
-        # Adiciona título
+        # Adiciona título com melhor formatação
         transport_name = "Aéreo" if transport_type == "air" else "Terrestre"
-        self.ax.set_title(f"Rota {transport_name}: {path[0].name} → {path[-1].name}")
+        self.ax.set_title(f"Rota {transport_name}: {path[0].name} → {path[-1].name}", 
+                         fontsize=14, fontweight='bold', pad=20)
         
-        # Adiciona legenda
+        # Calcula posição inteligente da legenda para evitar sobreposição
+        legend_position = self.calculate_best_legend_position(path)
+        
+        # Adiciona legenda melhorada com posicionamento inteligente
         legend_elements = [
-            Patch(facecolor='green', edgecolor='green', label='Origem'),
-            Patch(facecolor='red', edgecolor='red', label='Destino'),
-            Patch(facecolor='blue', edgecolor='blue', label='Intermediária'),
-            Patch(facecolor='white', edgecolor='blue' if transport_type == "air" else 'brown', 
-                 label='Rota ' + transport_name)
+            plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='#228B22', 
+                      markersize=10, label='Origem', markeredgecolor='white', markeredgewidth=2),
+            plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='#DC143C', 
+                      markersize=10, label='Destino', markeredgecolor='white', markeredgewidth=2),
+            plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='#4169E1', 
+                      markersize=8, label='Parada', markeredgecolor='white', markeredgewidth=1),
+            plt.Line2D([0], [0], color='#4169E1' if transport_type == "air" else '#8B4513', 
+                      linewidth=3, label=f'Rota {transport_name}')
         ]
-        self.ax.legend(handles=legend_elements, loc='lower right', fontsize=8)
+        
+        # Posiciona a legenda de forma inteligente
+        legend = self.ax.legend(handles=legend_elements, loc=legend_position, fontsize=9, 
+                               framealpha=0.95, shadow=True, fancybox=True,
+                               borderpad=0.8, columnspacing=1, handlelength=1.5)
         
         # Atualiza o canvas
         self.canvas.draw()
     
     def draw_brazil_map(self):
         try:
-            # Desenha o mapa do Brasil com estados
+            # Desenha o mapa do Brasil com visual melhorado
             self.brazil_gdf.plot(
                 ax=self.ax,
-                edgecolor='black',
-                color='lightblue',
-                linewidth=0.8,
-                alpha=0.6
+                edgecolor='#2F4F4F',
+                color='#E6F3FF',
+                linewidth=1.2,
+                alpha=0.8
             )
             
-            # Limita o mapa ao Brasil
-            self.ax.set_xlim(-75, -30)
-            self.ax.set_ylim(-35, 5)
+            # Adiciona uma borda mais escura para definir melhor o país
+            self.brazil_gdf.boundary.plot(
+                ax=self.ax,
+                color='#1C3A3A',
+                linewidth=2.0,
+                alpha=0.9
+            )
+            
+            # Limita o mapa ao Brasil com zoom aproximado
+            self.ax.set_xlim(-73, -33)
+            self.ax.set_ylim(-33, 5)
             
             # Remove eixos de coordenadas
             self.ax.set_axis_off()
+            
+            # Adiciona um fundo oceânico sutil
+            self.ax.set_facecolor('#F0F8FF')
             
         except Exception as e:
             print(f"Erro ao desenhar mapa do Brasil: {e}")
@@ -542,9 +755,9 @@ class RouteFinderApp(tk.Tk):
         self.ax.fill(brazil_x, brazil_y, color='lightblue', alpha=0.5)
         self.ax.plot(brazil_x, brazil_y, 'k-', linewidth=1, alpha=0.7)
         
-        # Configura os limites do mapa
-        self.ax.set_xlim(-75, -30)
-        self.ax.set_ylim(-35, 5)
+        # Configura os limites do mapa com zoom aproximado
+        self.ax.set_xlim(-73, -33)
+        self.ax.set_ylim(-33, 5)
         
         # Remove eixos de coordenadas
         self.ax.set_axis_off()
@@ -556,18 +769,64 @@ class RouteFinderApp(tk.Tk):
         # Desenha o mapa base do Brasil
         self.draw_brazil_map()
         
-        # Plota todas as capitais
+        # Dicionário com posicionamentos otimizados para evitar sobreposição
+        label_positions = {
+            "São Paulo": ("right", "bottom"),
+            "Rio de Janeiro": ("right", "top"), 
+            "Brasília": ("center", "bottom"),
+            "Salvador": ("right", "center"),
+            "Manaus": ("center", "bottom"),
+            "Porto Alegre": ("center", "bottom"),
+            "Recife": ("right", "center"),
+            "Belém": ("right", "bottom"),
+            "Fortaleza": ("right", "bottom"),
+            "Belo Horizonte": ("left", "bottom"),
+            "Curitiba": ("left", "bottom"),
+            "Goiânia": ("center", "bottom"),
+            "Vitória": ("right", "bottom"),
+            "Florianópolis": ("center", "bottom"),
+            "Campo Grande": ("center", "top"),
+            "Cuiabá": ("center", "top"),
+            "João Pessoa": ("left", "bottom"),
+            "Natal": ("center", "bottom"),
+            "Aracaju": ("left", "center"),
+            "Maceió": ("center", "top"),
+            "Teresina": ("center", "top"),
+            "São Luís": ("left", "bottom"),
+            "Palmas": ("right", "bottom"),
+            "Macapá": ("center", "bottom"),
+            "Boa Vista": ("left", "bottom"),
+            "Rio Branco": ("center", "bottom"),
+            "Porto Velho": ("center", "bottom")
+        }
+        
+        # Plota todas as capitais com estilo melhorado
         for city_name, (lat, lon) in CAPITAL_COORDINATES.items():
             if city_name in [city.name for city in self.graph.cities]:
-                self.ax.plot(lon, lat, 'o', markersize=5, color='darkblue', alpha=0.6)
-                # Adiciona apenas o nome das capitais principais
-                if city_name in ["São Paulo", "Rio de Janeiro", "Brasília", "Salvador", 
-                                "Manaus", "Porto Alegre", "Recife", "Belém"]:
-                    self.ax.annotate(city_name, (lon, lat), fontsize=8, ha='center',
-                                    bbox=dict(boxstyle="round,pad=0.2", facecolor='white', alpha=0.7))
+                self.ax.plot(lon, lat, 'o', markersize=8, color='#1E90FF', alpha=0.9,
+                           markeredgecolor='white', markeredgewidth=1.5)
+                
+                # Adiciona nomes de todas as capitais com posicionamento inteligente
+                ha, va = label_positions.get(city_name, ("center", "bottom"))
+                
+                # Ajusta offset baseado na posição com espaçamento maior
+                offset_x = 0.6 if ha == "left" else (-0.6 if ha == "right" else 0)
+                offset_y = 0.4 if va == "bottom" else (-0.4 if va == "top" else 0)
+                
+                self.ax.annotate(city_name, (lon + offset_x, lat + offset_y), 
+                               fontsize=8, ha=ha, va=va,
+                               bbox=dict(boxstyle="round,pad=0.2", facecolor='white', 
+                                        alpha=0.9, edgecolor='#1E90FF', linewidth=0.5))
         
-        # Adiciona título
-        self.ax.set_title("Mapa do Brasil - Capitais", fontsize=12)
+        # Adiciona título com melhor formatação
+        self.ax.set_title("Mapa do Brasil - Capitais dos Estados", fontsize=14, 
+                         fontweight='bold', pad=20)
+        
+        # Adiciona informação sobre o número de capitais (posição ajustada para o zoom)
+        num_capitals = len([name for name in CAPITAL_COORDINATES.keys() 
+                           if name in [city.name for city in self.graph.cities]])
+        self.ax.text(-72, -30, f"Total: {num_capitals} capitais", fontsize=10, 
+                    bbox=dict(boxstyle="round,pad=0.3", facecolor='lightgray', alpha=0.8))
         
         # Atualiza o canvas
         self.canvas.draw()

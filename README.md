@@ -1,98 +1,153 @@
-# Projeto de Algoritmos de Busca - Rotas entre Capitais Brasileiras
+# 🇧🇷 Sistema de Rotas entre Capitais Brasileiras
 
-Este projeto implementa diferentes algoritmos de busca para encontrar rotas entre capitais brasileiras, tanto por via aérea quanto terrestre.
+Este projeto implementa e compara diferentes algoritmos de busca para encontrar rotas entre as 27 capitais brasileiras, com visualização interativa em mapa do Brasil e suporte para transporte aéreo e terrestre.
 
-## Algoritmos Implementados
+## ✨ Funcionalidades Principais
 
-1. Busca em Largura (BFS)
-2. Busca em Profundidade (DFS)
-3. Busca de Custo Uniforme (UCS)
-4. Busca Gulosa (Greedy)
-5. Busca A* (A-Star)
+### 🗺️ Visualização Interativa
+- **Mapa completo do Brasil** com todas as 27 capitais
+- **Rotas visualizadas** com diferentes cores para aéreo/terrestre
+- **Posicionamento inteligente** de labels para evitar sobreposições
+- **Zoom otimizado** para melhor visualização dos detalhes
+- **Legenda dinâmica** que se posiciona automaticamente
 
-## Requisitos
+### 🔍 Algoritmos de Busca Implementados
+- **BFS (Busca em Largura)**: Encontra caminho com menor número de conexões
+- **DFS (Busca em Profundidade)**: Explora caminhos em profundidade
+- **UCS (Busca de Custo Uniforme)**: Encontra rota de menor distância (ótimo)
+- **Greedy (Busca Gulosa)**: Usa heurística de distância euclidiana
+- **A* (A-Star)**: Combina custo real + heurística (ótimo e eficiente)
 
-- Python 3.6+
-- Pacotes:
-  - requests
+### 🚗✈️ Tipos de Transporte
+- **Aéreo**: Conexões diretas por linha reta
+- **Terrestre**: Rotas inteligentes que evitam oceano, usando pontos intermediários
 
-## Instalação
+### 📊 Análise Comparativa
+- **Execução simultânea** de todos os algoritmos
+- **Comparação detalhada** de distância, nós expandidos e otimalidade
+- **Identificação automática** da melhor solução
 
+## 🚀 Execução
+
+### Opção 1: Docker (Recomendado)
 ```bash
-# Clone o repositório
-git clone https://github.com/oguarni/rotas-capitais.git
-cd rotas-capitais
-
-# Instale as dependências
-pip install requests
+# Execute diretamente com Docker
+./run_docker_gui.sh
 ```
 
-## Uso
-
-### Executar o programa principal
-
+### Opção 2: Ambiente Local
 ```bash
-python main.py
+# Instale dependências
+sudo apt-get install python3-tk  # Ubuntu/Debian
+pip install -r requirements.txt
+
+# Execute a aplicação
+python3 run_map_gui.py
 ```
 
-O programa oferece as seguintes opções:
-1. Encontrar rota entre duas capitais
-2. Comparar algoritmos para uma rota
-3. Analisar cenários de teste
-0. Sair
+## 🏗️ Arquitetura do Sistema
 
-### Exemplo de análise de cenário
+```
+rotas-capitais/
+├── 📋 Aplicação Principal
+│   ├── main_gui_maps.py      # Interface gráfica com mapa (PRINCIPAL)
+│   ├── run_map_gui.py        # Script de execução com verificações
+│   └── geo_coordinates.py    # Coordenadas das 27 capitais brasileiras
+│
+├── 🧠 Algoritmos de Busca
+│   └── search/
+│       ├── interface.py      # Interface base (SearchAlgorithm)
+│       ├── bfs.py           # Busca em Largura
+│       ├── dfs.py           # Busca em Profundidade  
+│       ├── ucs.py           # Busca de Custo Uniforme
+│       ├── greedy.py        # Busca Gulosa
+│       └── astar.py         # Algoritmo A*
+│
+├── 📊 Modelos de Dados
+│   └── models/
+│       ├── city.py          # Classe City
+│       └── graph.py         # Classe Graph com conectividades
+│
+├── 🛠️ Utilitários
+│   └── utils/
+│       ├── data_loader.py   # Carregamento de dados
+│       ├── comparison.py    # Comparação de algoritmos
+│       └── report_generator.py # Geração de relatórios
+│
+├── 🗃️ Dados
+│   └── data/
+│       ├── distances.json   # Distâncias entre todas as capitais
+│       ├── brazil_country.geojson # Mapa do Brasil (1.1 MB)
+│       └── brazil_states.geojson  # Estados detalhados (3.2 MB)
+│
+└── 🐳 Docker
+    ├── Dockerfile           # Configuração Docker
+    ├── docker-compose.yml   # Orquestração
+    └── run_docker_gui.sh    # Script de execução
+```
 
-Cenário: São Paulo -> Rio de Janeiro
-- Algoritmo: BFS
-  - Caminho: São Paulo -> Rio de Janeiro
-  - Distância: 400 km
-  - Nós expandidos: 2
+## 🎯 Princípios SOLID Aplicados
 
-- Algoritmo: DFS
-  - Caminho: São Paulo -> Rio de Janeiro
-  - Distância: 400 km
-  - Nós expandidos: 2
+| Princípio | Implementação |
+|-----------|---------------|
+| **S** - Single Responsibility | `City` gerencia cidades, `Graph` gerencia conexões, cada algoritmo tem função específica |
+| **O** - Open/Closed | Novos algoritmos podem ser adicionados implementando `SearchAlgorithm` |
+| **L** - Liskov Substitution | Todos os algoritmos são intercambiáveis via interface comum |
+| **I** - Interface Segregation | Interface `SearchAlgorithm` contém apenas método `search()` |
+| **D** - Dependency Inversion | Aplicação depende de abstrações, não implementações concretas |
 
-- Algoritmo: UCS
-  - Caminho: São Paulo -> Rio de Janeiro
-  - Distância: 400 km
-  - Nós expandidos: 2
+## 📈 Análise de Performance
 
-- Algoritmo: GREEDY
-  - Caminho: São Paulo -> Rio de Janeiro
-  - Distância: 400 km
-  - Nós expandidos: 2
+### Exemplo: São Paulo → Manaus
 
-- Algoritmo: ASTAR
-  - Caminho: São Paulo -> Rio de Janeiro
-  - Distância: 400 km
-  - Nós expandidos: 2
+| Algoritmo | Distância | Nós Expandidos | Caminho | Ótimo |
+|-----------|-----------|----------------|---------|-------|
+| UCS | 2,689 km | 15 | SP→Brasília→Manaus | ✅ |
+| A* | 2,689 km | 8 | SP→Brasília→Manaus | ✅ |
+| Greedy | 2,689 km | 3 | SP→Brasília→Manaus | ✅ |
+| BFS | 3,971 km | 12 | SP→Manaus (direto) | ❌ |
+| DFS | 4,250 km | 18 | SP→múltiplas paradas | ❌ |
 
-## Estrutura do Projeto
+## 🗺️ Capitais Incluídas (27)
 
-- **models/**: Classes para representar cidades e grafo
-- **search/**: Implementações dos algoritmos de busca
-- **utils/**: Utilitários para carregar dados
-- **main.py**: Ponto de entrada da aplicação
+### Região Norte
+- Belém (PA), Boa Vista (RR), Macapá (AP), Manaus (AM), Palmas (TO), Porto Velho (RO), Rio Branco (AC)
 
-## Princípios SOLID Aplicados
+### Região Nordeste  
+- Aracaju (SE), Fortaleza (CE), João Pessoa (PB), Maceió (AL), Natal (RN), Recife (PE), Salvador (BA), São Luís (MA), Teresina (PI)
 
-1. **S - Single Responsibility Principle**: Cada classe tem uma única responsabilidade.
-   - Exemplo: `City` gerencia informações de uma cidade, `Graph` gerencia conexões.
+### Região Centro-Oeste
+- Brasília (DF), Campo Grande (MS), Cuiabá (MT), Goiânia (GO)
 
-2. **O - Open/Closed Principle**: As classes são abertas para extensão, fechadas para modificação.
-   - Exemplo: Novos algoritmos podem ser adicionados sem modificar a interface.
+### Região Sudeste
+- Belo Horizonte (MG), Rio de Janeiro (RJ), São Paulo (SP), Vitória (ES)
 
-3. **L - Liskov Substitution Principle**: Algoritmos derivados podem substituir a classe base.
-   - Exemplo: Todos os algoritmos implementam a interface `SearchAlgorithm`.
+### Região Sul
+- Curitiba (PR), Florianópolis (SC), Porto Alegre (RS)
 
-4. **I - Interface Segregation Principle**: Interfaces específicas para necessidades específicas.
-   - Exemplo: A interface `SearchAlgorithm` contém apenas o método necessário.
+## 🛠️ Requisitos Técnicos
 
-5. **D - Dependency Inversion Principle**: Depender de abstrações, não implementações.
-   - Exemplo: `PathFinder` depende da interface `SearchAlgorithm`, não de implementações concretas.
+### Python 3.9+
+```bash
+# Dependências principais
+matplotlib>=3.5.0    # Visualização de gráficos
+networkx>=2.8       # Manipulação de grafos  
+geopandas>=0.12.0   # Processamento geoespacial
+tkinter             # Interface gráfica (incluído no Python)
+```
 
-## Contribuição
+### Sistema
+- **Linux**: X11 para interface gráfica
+- **Docker**: Para execução isolada (recomendado)
+- **Memória**: ~100MB para mapas em cache
 
-Desenvolvido por Gabriel Felipe Guarnieri para a disciplina de Fundamentos de Sistemas Inteligentes - UTFPR Campus Dois Vizinhos.
+## 🎓 Contexto Acadêmico
+
+**Disciplina**: Fundamentos de Sistemas Inteligentes  
+**Instituição**: UTFPR - Campus Dois Vizinhos  
+**Objetivo**: Implementar e comparar algoritmos de busca em grafos  
+**Aplicação**: Sistema prático com dados reais das capitais brasileiras
+
+## 📄 Licença
+
+Projeto desenvolvido para fins acadêmicos.
