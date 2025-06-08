@@ -2,5 +2,6 @@ requests
 tabulate
 matplotlib
 numpy
-matplotlib
 networkx
+geopandas
+shapely

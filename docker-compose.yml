@@ -1,12 +1,14 @@
-version: '3'
+version: '3.8'
 services:
   route-finder:
     build: .
     volumes:
-      - ./:/app
-      - ./output:/app/output
-      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ./data:/app/data:ro
+      - ./output:/app/output:rw
     environment:
-      - DISPLAY=${DISPLAY}
+      - DISPLAY=${DISPLAY:-:0}
+      - PYTHONUNBUFFERED=1
+    network_mode: "host"
     stdin_open: true
     tty: true

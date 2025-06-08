@@ -1,0 +1,144 @@
+# Arquivos Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# celery beat schedule file
+celerybeat-schedule
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Arquivos temporários
+*.tmp
+*.temp
+*.log
+
+# Arquivos de instalação
+*.deb
+*.rpm
+*.dmg
+*.exe
+*.msi
+
+# Dados de cache e output
+output/cache/
+*.cache
+temp_files/
+
+# Shapefiles baixados dinamicamente
+data/brazil_states/*.shp
+data/brazil_states/*.dbf
+data/brazil_states/*.shx
+data/brazil_states/*.prj
+data/brazil_states/*.cpg
+data/brazil_states/*.zip
+
+# Arquivos de configuração local
+config_local.py
+settings_local.py
+.claude/
+CLAUDE.md
+
+# Arquivos temporários específicos do projeto
+docker_output.log
+*.svg
+demo_*.py
+test_*.py
+fix_*.py
+COMMIT_SUMMARY.md
+
+# Documentação temporária
+AJUSTE_*.md
+CORRECOES_*.md
+DOCKER_*.md
+MELHORIAS_*.md
+MAPA_*.md
+
+# Variações de scripts (manter apenas principais)
+main_gui_detailed_map.py
+main_gui_optimized.py
+main_gui_premium.py
+main_gui_real_map.py
+main_gui_simple_map.py
+run_docker_compose_gui.sh
+run_map_docker.sh
+test_docker.sh
+update_docker.sh
+Dockerfile.simple
+
+# Mapas de backup (manter apenas principais)
+data/brazil_map.geojson
+data/brazil_map.svg
+data/brazil_outline.geojson
+data/brazil_simple.geojson
