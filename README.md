@@ -148,6 +148,10 @@ tkinter             # Interface gráfica (incluído no Python)
 **Objetivo**: Implementar e comparar algoritmos de busca em grafos  
 **Aplicação**: Sistema prático com dados reais das capitais brasileiras
 
-## 📄 Licença
+## 📄 License
 
-Projeto desenvolvido para fins acadêmicos.
+This project is licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/).
+
+You are free to share and adapt this work for non-commercial purposes, provided you give appropriate credit and distribute your contributions under the same license.
+
+See the [LICENSE](LICENSE) file for full details.
